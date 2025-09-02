@@ -23,7 +23,7 @@ module.exports = async (req, res) => {
     try {
       // Store the user data in Redis.
       // We'll use the username as part of the key.
-      await redis.set(`user:${username}`, { username, password });
+      await redis.set(`user:${username}`, `password:${password}`);
 
       res.status(200).json({ message: "Credentials stored successfully." });
     } catch (error) {
