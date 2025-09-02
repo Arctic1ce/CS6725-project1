@@ -1,5 +1,6 @@
 const { kv } = require("@vercel/kv");
 const { createHash } = require("crypto");
+const { createClient } = require("redis");
 
 module.exports = async (req, res) => {
   if (req.method === "POST") {
@@ -11,14 +12,12 @@ module.exports = async (req, res) => {
         .json({ error: "Username and password are required." });
     }
 
-    // CRITICAL: Hash the password before storing it.
-    // Never store plain-text passwords.
-    const hashedPassword = createHash("sha256").update(password).digest("hex");
+    const redis = await createClient().connect();
 
     try {
-      // Store the user data in Vercel KV.
+      // Store the user data in Redis.
       // We'll use the username as part of the key.
-      await kv.set(`user:${username}`, { username, password: hashedPassword });
+      await redis.set(`user:${username}`, { username, password });
 
       res.status(200).json({ message: "Credentials stored successfully." });
     } catch (error) {
