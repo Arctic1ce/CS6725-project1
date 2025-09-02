@@ -1,15 +1,30 @@
-module.exports = (req, res) => {
+const { kv } = require("@vercel/kv");
+const { createHash } = require("crypto");
+
+module.exports = async (req, res) => {
   if (req.method === "POST") {
     const { username, password } = req.body;
 
-    // In a real application, you would hash the password
-    // and store the credentials in a secure database.
-    // For this example, we'll just log them to the Vercel console.
-    console.log("Received credentials:");
-    console.log("Username:", username);
-    console.log("Password:", password);
+    if (!username || !password) {
+      return res
+        .status(400)
+        .json({ error: "Username and password are required." });
+    }
 
-    res.status(200).json({ message: "Credentials received successfully." });
+    // CRITICAL: Hash the password before storing it.
+    // Never store plain-text passwords.
+    const hashedPassword = createHash("sha256").update(password).digest("hex");
+
+    try {
+      // Store the user data in Vercel KV.
+      // We'll use the username as part of the key.
+      await kv.set(`user:${username}`, { username, password: hashedPassword });
+
+      res.status(200).json({ message: "Credentials stored successfully." });
+    } catch (error) {
+      console.error("Error storing credentials:", error);
+      res.status(500).json({ error: "Failed to store credentials." });
+    }
   } else {
     // Handle any non-POST requests
     res.setHeader("Allow", ["POST"]);
