@@ -16,7 +16,7 @@ module.exports = async (req, res) => {
 
     if (!redis) {
       redis = new Redis(process.env.REDIS_URL, {
-        tls: {}, // important because your URL is `rediss://` (SSL)
+        maxRetriesPerRequest: 1, // fail fast in serverless env
       });
     }
 
