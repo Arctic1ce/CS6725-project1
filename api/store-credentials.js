@@ -1,6 +1,6 @@
 const { kv } = require("@vercel/kv");
 const { createHash } = require("crypto");
-const { createClient } = require("redis");
+import { Redis } from "@upstash/redis";
 
 module.exports = async (req, res) => {
   if (req.method === "POST") {
@@ -12,7 +12,9 @@ module.exports = async (req, res) => {
         .json({ error: "Username and password are required." });
     }
 
-    const redis = await createClient().connect();
+    const redis = new Redis({
+      url: process.env.REDIS_URL,
+    });
 
     try {
       // Store the user data in Redis.
